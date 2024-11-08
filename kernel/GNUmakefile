@@ -110,6 +110,7 @@ all: bin/$(OUTPUT)
 
 # Link rules for building the C compiler runtime.
 cc-runtime-x86_64/cc-runtime.a: cc-runtime/*
+	rm -rf cc-runtime-x86_64
 	cp -r cc-runtime cc-runtime-x86_64
 	$(MAKE) -C cc-runtime-x86_64 -f cc-runtime.mk \
 		CC="$(KCC)" \
