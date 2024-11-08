@@ -18,6 +18,9 @@ $(call USER_VARIABLE,PREFIX,/usr/local)
 # User controllable C compiler command.
 $(call USER_VARIABLE,KCC,cc)
 
+# User controllable archiver command.
+$(call USER_VARIABLE,KAR,ar)
+
 # User controllable linker command.
 $(call USER_VARIABLE,KLD,ld)
 
@@ -35,7 +38,7 @@ $(call USER_VARIABLE,KLDFLAGS,)
 
 # Ensure the dependencies have been obtained.
 ifneq ($(shell ( test '$(MAKECMDGOALS)' = clean || test '$(MAKECMDGOALS)' = distclean ); echo $$?),0)
-    ifeq ($(shell ( ! test -d freestnd-c-hdrs-0bsd || ! test -f src/cc-runtime.c || ! test -f src/limine.h ); echo $$?),0)
+    ifeq ($(shell ( ! test -d freestnd-c-hdrs-0bsd || ! test -d cc-runtime || ! test -f src/limine.h ); echo $$?),0)
         $(error Please run the ./get-deps script first)
     endif
 endif
@@ -105,10 +108,19 @@ override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
 .PHONY: all
 all: bin/$(OUTPUT)
 
+# Link rules for building the C compiler runtime.
+cc-runtime-x86_64/cc-runtime.a: cc-runtime/*
+	cp -r cc-runtime cc-runtime-x86_64
+	$(MAKE) -C cc-runtime-x86_64 -f cc-runtime.mk \
+		CC="$(KCC)" \
+		AR="$(KAR)" \
+		CFLAGS="$(KCFLAGS)" \
+		CPPFLAGS='-isystem ../freestnd-c-hdrs-0bsd -DCC_RUNTIME_NO_FLOAT'
+
 # Link rules for the final executable.
-bin/$(OUTPUT): GNUmakefile linker.ld $(OBJ)
+bin/$(OUTPUT): GNUmakefile linker.ld $(OBJ) cc-runtime-x86_64/cc-runtime.a
 	mkdir -p "$$(dirname $@)"
-	$(KLD) $(OBJ) $(KLDFLAGS) -o $@
+	$(KLD) $(OBJ) cc-runtime-x86_64/cc-runtime.a $(KLDFLAGS) -o $@
 
 # Include header dependencies.
 -include $(HEADER_DEPS)
@@ -131,12 +143,12 @@ obj/%.asm.o: src/%.asm GNUmakefile
 # Remove object files and the final executable.
 .PHONY: clean
 clean:
-	rm -rf bin obj
+	rm -rf bin obj cc-runtime-x86_64
 
 # Remove everything built and generated including downloaded dependencies.
 .PHONY: distclean
 distclean: clean
-	rm -rf freestnd-c-hdrs-0bsd src/cc-runtime.c src/limine.h
+	rm -rf freestnd-c-hdrs-0bsd cc-runtime src/limine.h
 
 # Install the final built executable to its final on-root location.
 .PHONY: install
