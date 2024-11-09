@@ -16,25 +16,25 @@ $(call USER_VARIABLE,DESTDIR,)
 $(call USER_VARIABLE,PREFIX,/usr/local)
 
 # User controllable C compiler command.
-$(call USER_VARIABLE,KCC,cc)
+$(call USER_VARIABLE,CC,cc)
 
 # User controllable archiver command.
-$(call USER_VARIABLE,KAR,ar)
+$(call USER_VARIABLE,AR,ar)
 
 # User controllable linker command.
-$(call USER_VARIABLE,KLD,ld)
+$(call USER_VARIABLE,LD,ld)
 
 # User controllable C flags.
-$(call USER_VARIABLE,KCFLAGS,-g -O2 -pipe)
+$(call USER_VARIABLE,CFLAGS,-g -O2 -pipe)
 
 # User controllable C preprocessor flags. We set none by default.
-$(call USER_VARIABLE,KCPPFLAGS,)
+$(call USER_VARIABLE,CPPFLAGS,)
 
 # User controllable nasm flags.
-$(call USER_VARIABLE,KNASMFLAGS,-F dwarf -g)
+$(call USER_VARIABLE,NASMFLAGS,-F dwarf -g)
 
 # User controllable linker flags. We set none by default.
-$(call USER_VARIABLE,KLDFLAGS,)
+$(call USER_VARIABLE,LDFLAGS,)
 
 # Ensure the dependencies have been obtained.
 ifneq ($(shell ( test '$(MAKECMDGOALS)' = clean || test '$(MAKECMDGOALS)' = distclean ); echo $$?),0)
@@ -43,17 +43,17 @@ ifneq ($(shell ( test '$(MAKECMDGOALS)' = clean || test '$(MAKECMDGOALS)' = dist
     endif
 endif
 
-# Check if KCC is Clang.
-override KCC_IS_CLANG := $(shell ! $(KCC) --version 2>/dev/null | grep 'clang' >/dev/null 2>&1; echo $$?)
+# Check if CC is Clang.
+override CC_IS_CLANG := $(shell ! $(CC) --version 2>/dev/null | grep 'clang' >/dev/null 2>&1; echo $$?)
 
 # If the C compiler is Clang, set the target as needed.
-ifeq ($(KCC_IS_CLANG),1)
-    override KCC += \
+ifeq ($(CC_IS_CLANG),1)
+    override CC += \
         -target x86_64-unknown-none
 endif
 
 # Internal C flags that should not be changed by the user.
-override KCFLAGS += \
+override CFLAGS += \
     -Wall \
     -Wextra \
     -std=gnu11 \
@@ -75,20 +75,20 @@ override KCFLAGS += \
     -mcmodel=kernel
 
 # Internal C preprocessor flags that should not be changed by the user.
-override KCPPFLAGS := \
+override CPPFLAGS := \
     -I src \
     -isystem freestnd-c-hdrs-0bsd \
-    $(KCPPFLAGS) \
+    $(CPPFLAGS) \
     -MMD \
     -MP
 
 # Internal nasm flags that should not be changed by the user.
-override KNASMFLAGS += \
+override NASMFLAGS += \
     -Wall \
     -f elf64
 
 # Internal linker flags that should not be changed by the user.
-override KLDFLAGS += \
+override LDFLAGS += \
     -m elf_x86_64 \
     -nostdlib \
     -static \
@@ -113,15 +113,15 @@ cc-runtime-x86_64/cc-runtime.a: cc-runtime/*
 	rm -rf cc-runtime-x86_64
 	cp -r cc-runtime cc-runtime-x86_64
 	$(MAKE) -C cc-runtime-x86_64 -f cc-runtime.mk \
-		CC="$(KCC)" \
-		AR="$(KAR)" \
-		CFLAGS="$(KCFLAGS)" \
+		CC="$(CC)" \
+		AR="$(AR)" \
+		CFLAGS="$(CFLAGS)" \
 		CPPFLAGS='-isystem ../freestnd-c-hdrs-0bsd -DCC_RUNTIME_NO_FLOAT'
 
 # Link rules for the final executable.
 bin/$(OUTPUT): GNUmakefile linker.ld $(OBJ) cc-runtime-x86_64/cc-runtime.a
 	mkdir -p "$$(dirname $@)"
-	$(KLD) $(OBJ) cc-runtime-x86_64/cc-runtime.a $(KLDFLAGS) -o $@
+	$(LD) $(OBJ) cc-runtime-x86_64/cc-runtime.a $(LDFLAGS) -o $@
 
 # Include header dependencies.
 -include $(HEADER_DEPS)
@@ -129,17 +129,17 @@ bin/$(OUTPUT): GNUmakefile linker.ld $(OBJ) cc-runtime-x86_64/cc-runtime.a
 # Compilation rules for *.c files.
 obj/%.c.o: src/%.c GNUmakefile
 	mkdir -p "$$(dirname $@)"
-	$(KCC) $(KCFLAGS) $(KCPPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compilation rules for *.S files.
 obj/%.S.o: src/%.S GNUmakefile
 	mkdir -p "$$(dirname $@)"
-	$(KCC) $(KCFLAGS) $(KCPPFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compilation rules for *.asm (nasm) files.
 obj/%.asm.o: src/%.asm GNUmakefile
 	mkdir -p "$$(dirname $@)"
-	nasm $(KNASMFLAGS) $< -o $@
+	nasm $(NASMFLAGS) $< -o $@
 
 # Remove object files and the final executable.
 .PHONY: clean
