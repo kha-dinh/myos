@@ -6,35 +6,29 @@ MAKEFLAGS += -rR
 # Change as needed.
 override OUTPUT := kernel
 
-# Convenience macro to reliably declare user overridable variables.
-override USER_VARIABLE = $(if $(filter $(origin $(1)),default undefined),$(eval override $(1) := $(2)))
-
-# Destination directory on install (should always be empty by default).
-$(call USER_VARIABLE,DESTDIR,)
-
 # Install prefix; /usr/local is a good, standard default pick.
-$(call USER_VARIABLE,PREFIX,/usr/local)
+PREFIX := /usr/local
 
 # User controllable C compiler command.
-$(call USER_VARIABLE,CC,cc)
+CC := cc
 
 # User controllable archiver command.
-$(call USER_VARIABLE,AR,ar)
+AR := ar
 
 # User controllable linker command.
-$(call USER_VARIABLE,LD,ld)
+LD := ld
 
 # User controllable C flags.
-$(call USER_VARIABLE,CFLAGS,-g -O2 -pipe)
+CFLAGS := -g -O2 -pipe
 
 # User controllable C preprocessor flags. We set none by default.
-$(call USER_VARIABLE,CPPFLAGS,)
+CPPFLAGS :=
 
 # User controllable nasm flags.
-$(call USER_VARIABLE,NASMFLAGS,-F dwarf -g)
+NASMFLAGS := -F dwarf -g
 
 # User controllable linker flags. We set none by default.
-$(call USER_VARIABLE,LDFLAGS,)
+LDFLAGS :=
 
 # Ensure the dependencies have been obtained.
 ifneq ($(shell ( test '$(MAKECMDGOALS)' = clean || test '$(MAKECMDGOALS)' = distclean ); echo $$?),0)
