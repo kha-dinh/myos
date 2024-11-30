@@ -73,6 +73,7 @@ override CPPFLAGS := \
     -I src \
     -isystem freestnd-c-hdrs-0bsd \
     $(CPPFLAGS) \
+    -DLIMINE_API_REVISION=1 \
     -MMD \
     -MP
 
@@ -103,7 +104,7 @@ override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
 all: bin/$(OUTPUT)
 
 # Link rules for building the C compiler runtime.
-cc-runtime-x86_64/cc-runtime.a: cc-runtime/*
+cc-runtime-x86_64/cc-runtime.a: GNUmakefile cc-runtime/*
 	rm -rf cc-runtime-x86_64
 	cp -r cc-runtime cc-runtime-x86_64
 	$(MAKE) -C cc-runtime-x86_64 -f cc-runtime.mk \
