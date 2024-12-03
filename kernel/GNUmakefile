@@ -93,15 +93,19 @@ override LDFLAGS += \
 
 # Use "find" to glob all *.c, *.S, and *.asm files in the tree and obtain the
 # object and header dependency file names.
-override CFILES := $(shell cd src && find -L * -type f -name '*.c' | LC_ALL=C sort)
-override ASFILES := $(shell cd src && find -L * -type f -name '*.S' | LC_ALL=C sort)
-override NASMFILES := $(shell cd src && find -L * -type f -name '*.asm' | LC_ALL=C sort)
+override SRCFILES := $(shell cd src && find -L * -type f | LC_ALL=C sort)
+override CFILES := $(filter %.c,$(SRCFILES))
+override ASFILES := $(filter %.S,$(SRCFILES))
+override NASMFILES := $(filter %.asm,$(SRCFILES))
 override OBJ := $(addprefix obj/,$(CFILES:.c=.c.o) $(ASFILES:.S=.S.o) $(NASMFILES:.asm=.asm.o))
 override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
 
-# Default target.
+# Default target. This must come first, before header dependencies.
 .PHONY: all
 all: bin/$(OUTPUT)
+
+# Include header dependencies.
+-include $(HEADER_DEPS)
 
 # Link rules for building the C compiler runtime.
 cc-runtime-x86_64/cc-runtime.a: GNUmakefile cc-runtime/*
@@ -117,9 +121,6 @@ cc-runtime-x86_64/cc-runtime.a: GNUmakefile cc-runtime/*
 bin/$(OUTPUT): GNUmakefile linker.ld $(OBJ) cc-runtime-x86_64/cc-runtime.a
 	mkdir -p "$$(dirname $@)"
 	$(LD) $(OBJ) cc-runtime-x86_64/cc-runtime.a $(LDFLAGS) -o $@
-
-# Include header dependencies.
--include $(HEADER_DEPS)
 
 # Compilation rules for *.c files.
 obj/%.c.o: src/%.c GNUmakefile
