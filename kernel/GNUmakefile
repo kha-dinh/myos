@@ -15,9 +15,6 @@ CC := cc
 # User controllable archiver command.
 AR := ar
 
-# User controllable linker command.
-LD := ld
-
 # User controllable C flags.
 CFLAGS := -g -O2 -pipe
 
@@ -55,7 +52,6 @@ override CFLAGS += \
     -ffreestanding \
     -fno-stack-protector \
     -fno-stack-check \
-    -fno-lto \
     -fno-PIC \
     -ffunction-sections \
     -fdata-sections \
@@ -84,11 +80,12 @@ override NASMFLAGS += \
 
 # Internal linker flags that should not be changed by the user.
 override LDFLAGS += \
-    -m elf_x86_64 \
+    -Wl,-m,elf_x86_64 \
+    -Wl,--build-id=none \
     -nostdlib \
     -static \
     -z max-page-size=0x1000 \
-    -gc-sections \
+    -Wl,--gc-sections \
     -T linker.ld
 
 # Use "find" to glob all *.c, *.S, and *.asm files in the tree and obtain the
@@ -120,7 +117,7 @@ cc-runtime-x86_64/cc-runtime.a: GNUmakefile cc-runtime/*
 # Link rules for the final executable.
 bin/$(OUTPUT): GNUmakefile linker.ld $(OBJ) cc-runtime-x86_64/cc-runtime.a
 	mkdir -p "$$(dirname $@)"
-	$(LD) $(OBJ) cc-runtime-x86_64/cc-runtime.a $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ) cc-runtime-x86_64/cc-runtime.a -o $@
 
 # Compilation rules for *.c files.
 obj/%.c.o: src/%.c GNUmakefile
