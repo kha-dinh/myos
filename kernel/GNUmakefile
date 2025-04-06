@@ -12,9 +12,6 @@ PREFIX := /usr/local
 # User controllable C compiler command.
 CC := cc
 
-# User controllable archiver command.
-AR := ar
-
 # User controllable C flags.
 CFLAGS := -g -O2 -pipe
 
@@ -29,7 +26,7 @@ LDFLAGS :=
 
 # Ensure the dependencies have been obtained.
 ifneq ($(shell ( test '$(MAKECMDGOALS)' = clean || test '$(MAKECMDGOALS)' = distclean ); echo $$?),0)
-    ifeq ($(shell ( ! test -d freestnd-c-hdrs || ! test -d cc-runtime || ! test -f src/limine.h ); echo $$?),0)
+    ifeq ($(shell ( ! test -d freestnd-c-hdrs || ! test -d src/cc-runtime || ! test -f src/limine.h ); echo $$?),0)
         $(error Please run the ./get-deps script first)
     endif
 endif
@@ -104,20 +101,10 @@ all: bin/$(OUTPUT)
 # Include header dependencies.
 -include $(HEADER_DEPS)
 
-# Link rules for building the C compiler runtime.
-cc-runtime-x86_64/cc-runtime.a: GNUmakefile cc-runtime/*
-	rm -rf cc-runtime-x86_64
-	cp -r cc-runtime cc-runtime-x86_64
-	$(MAKE) -C cc-runtime-x86_64 -f cc-runtime.mk \
-		CC="$(CC)" \
-		AR="$(AR)" \
-		CFLAGS="$(CFLAGS)" \
-		CPPFLAGS='-isystem ../freestnd-c-hdrs -DCC_RUNTIME_NO_FLOAT'
-
 # Link rules for the final executable.
-bin/$(OUTPUT): GNUmakefile linker.ld $(OBJ) cc-runtime-x86_64/cc-runtime.a
+bin/$(OUTPUT): GNUmakefile linker.ld $(OBJ)
 	mkdir -p "$$(dirname $@)"
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ) cc-runtime-x86_64/cc-runtime.a -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ) -o $@
 
 # Compilation rules for *.c files.
 obj/%.c.o: src/%.c GNUmakefile
@@ -137,12 +124,12 @@ obj/%.asm.o: src/%.asm GNUmakefile
 # Remove object files and the final executable.
 .PHONY: clean
 clean:
-	rm -rf bin obj cc-runtime-x86_64
+	rm -rf bin obj
 
 # Remove everything built and generated including downloaded dependencies.
 .PHONY: distclean
 distclean: clean
-	rm -rf freestnd-c-hdrs cc-runtime src/limine.h
+	rm -rf freestnd-c-hdrs src/cc-runtime src/limine.h
 
 # Install the final built executable to its final on-root location.
 .PHONY: install
