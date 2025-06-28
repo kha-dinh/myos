@@ -12,6 +12,9 @@ PREFIX := /usr/local
 # User controllable C compiler command.
 CC := cc
 
+# User controllable linker command.
+LD := ld
+
 # User controllable C flags.
 CFLAGS := -g -O2 -pipe
 
@@ -49,6 +52,7 @@ override CFLAGS += \
     -ffreestanding \
     -fno-stack-protector \
     -fno-stack-check \
+    -fno-lto \
     -fno-PIC \
     -ffunction-sections \
     -fdata-sections \
@@ -77,12 +81,11 @@ override NASMFLAGS += \
 
 # Internal linker flags that should not be changed by the user.
 override LDFLAGS += \
-    -Wl,-m,elf_x86_64 \
-    -Wl,--build-id=none \
+    -m elf_x86_64 \
     -nostdlib \
     -static \
     -z max-page-size=0x1000 \
-    -Wl,--gc-sections \
+    -gc-sections \
     -T linker.ld
 
 # Use "find" to glob all *.c, *.S, and *.asm files in the tree and obtain the
@@ -104,7 +107,7 @@ all: bin/$(OUTPUT)
 # Link rules for the final executable.
 bin/$(OUTPUT): GNUmakefile linker.ld $(OBJ)
 	mkdir -p "$$(dirname $@)"
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ) -o $@
+	$(LD) $(OBJ) $(LDFLAGS) -o $@
 
 # Compilation rules for *.c files.
 obj/%.c.o: %.c GNUmakefile
