@@ -14,6 +14,19 @@ All `make all*` targets depend on a GNU-compatible C toolchain capable of genera
 
 Additionally, building an ISO with `make all` requires `xorriso`, and building a HDD/USB image with `make all-hdd` requires `sgdisk` (usually from `gdisk` or `gptfdisk` packages) and `mtools`.
 
+### Toolchain selection
+
+The `TOOLCHAIN` and `TOOLCHAIN_PREFIX` `make` variables can be used to set the toolchain. `TOOLCHAIN` can be set to `llvm` to use Clang/LLVM.
+
+For example:
+```
+make TOOLCHAIN=llvm
+```
+or:
+```
+make TOOLCHAIN_PREFIX=x86_64-elf-
+```
+
 ### Makefile targets
 
 Running `make all` will compile the kernel (from the `kernel/` directory) and then generate a bootable ISO image.
