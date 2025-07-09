@@ -59,7 +59,7 @@ override CC_IS_CLANG := $(shell ! $(CC) --version 2>/dev/null | grep -q '^Target
 # If the C compiler is Clang, set the target as needed.
 ifeq ($(CC_IS_CLANG),1)
     override CC += \
-        -target x86_64-unknown-none
+        -target x86_64-unknown-none-elf
 endif
 
 # Internal C flags that should not be changed by the user.
