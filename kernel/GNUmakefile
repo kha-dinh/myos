@@ -54,7 +54,7 @@ ifneq ($(shell ( test '$(MAKECMDGOALS)' = clean || test '$(MAKECMDGOALS)' = dist
 endif
 
 # Check if CC is Clang.
-override CC_IS_CLANG := $(shell ! $(CC) --version 2>/dev/null | grep '^Target:' >/dev/null 2>&1; echo $$?)
+override CC_IS_CLANG := $(shell ! $(CC) --version 2>/dev/null | grep -q '^Target: '; echo $$?)
 
 # If the C compiler is Clang, set the target as needed.
 ifeq ($(CC_IS_CLANG),1)
